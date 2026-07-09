@@ -1,0 +1,16 @@
+# CODEOWNERS for Altavio_Scripts
+#
+# These owners will be automatically requested for review when someone
+# opens a pull request that modifies matching files.
+#
+# Note: owners must be GitHub users with write access to this repository,
+# or teams within the SmartHomeForAll organization (e.g. @SmartHomeForAll/maintainers).
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything in the repo
+*               @KonradHerba
+
+# Platform-specific folders — add dedicated maintainers here as the project grows
+# Home_Assistant/   @SmartHomeForAll/home-assistant-maintainers
+# Shelly/           @SmartHomeForAll/shelly-maintainers
+# Tuya/             @SmartHomeForAll/tuya-maintainers

@@ -1,0 +1,49 @@
+# --- Secrets & credentials (never commit these!) ---
+*.env
+.env.*
+secrets.yaml
+secrets.yml
+*credentials*
+*.pem
+*.key
+*.pfx
+
+# --- OS files ---
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+# macOS
+.DS_Store
+._*
+# Linux
+*~
+
+# --- Editors & IDEs ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Python (helper scripts / tooling) ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# --- Node.js (tooling) ---
+node_modules/
+npm-debug.log*
+
+# --- Logs & temporary files ---
+*.log
+*.tmp
+*.bak
+tmp/
+temp/
+
+# --- Archives (avoid committing packaged builds) ---
+*.zip
+*.tar.gz
+*.rar
