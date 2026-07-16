@@ -26,11 +26,6 @@ let CONFIG = {
       "94:B2:16:08:8D:CE" // devices with these mac addresses will be used to trigger the dimmer
     ],
   
-    // SHELLY BLU MOTION ROOM ILLUMINANCE THRESHOLD TO TRIGGER THE DIMMER  //
-    // IF THE ROOM ILLUMINANCE LEVEL IS ABOVE THIS VALUE, THE DIMMER WILL NOT BE ACTIVATED  //
-    // THIS IS TO AVOID TRIGGERING THE DIMMER WHEN THE ROOM IS LIGHTED UP BY OTHER SOURCES THAN THE DIMMER  //
-    illuminanceThreshold: 20, // illuminance level in lux to trigger the dimmer after motion detection
-  
     // LIGHTS ON TIME PERIOD (in seconds)  //
     // THIS IS THE TIME INTERVAL FOR WHICH THE DIMMER WILL BE ACTIVATED AFTER MOTION DETECTION  //
     lightsOnTimePeriod: 120, // seconds
