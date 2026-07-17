@@ -18,44 +18,44 @@ let CONFIG = {
   // Active scan means the scanner will ping back the Bluetooth device to receive all its data, but it will drain the battery faster
   active: false,
 
-    /* ****************************************************************************************
-     * *************** THIS IS WHERE YOU NEED TO UPDATE AUTOMATION CONFIGURATION *************
-     * ****************************************************************************************/
-    // THIS ATTRIBUTE TELLS WHEN THE AUTOMATION IS ALLOWED TO RUN. OPTIONS ARE: 
-    // "NIGHT", "SPECIFIED" or "ALWAYS". 
-    // "NIGHT" is defined as a period from down to dusk
-    // "SPECIFIED" uses below specifiedTimes, for defining activation hours (time interval)
-    // "ALWAYS" means that the motion detected dimming runs 24/7 without any limitations 
-    // it is intended to be used as a diagnostic mode
-    activationTimes: "ALWAYS", // "NIGHT", "SPECIFIED" or "ALWAYS"
-  
-    // SPECIFIED TIMES FOR THE AUTOMATION TO RUN 
-    // This is the time period when automation is active. Outside of specified hours it becomes idle
-    specifiedTimes: [
-      {
-        start: "23:00",
-        end: "07:00"
-      }
-    ],
-    
-    // PASTE YOUR SHELLY BLU MOTION DETECTOR MAC BELOW 
-    // MAC is a unique device identifier and can be found in device's Settings → Device information
-    allowedMacAddresses: [
-      "94:B2:16:08:8D:CE" // devices with these mac addresses will be used to trigger the dimmer
-    ],
-  
-    // LIGHTS ON TIME PERIOD (in seconds) 
-    // This is the time interval for which lights will stay on, dimmed to below defined value
-    lightsOnTimePeriod: 120, // seconds
-  
-    // CONFIGURE THE BRIGHTNESS (in percentage) TO SET AFTER MOTION DETECTION
-    // This is the illuminance/lights "intensivity" when turned on. 
-    lightBrightness: 3, // percentage value of the brightness to set after motion 
-    
-    // SHELLY BLU MOTION ROOM ILLUMINANCE THRESHOLD TO TRIGGER THE DIMMER
-    // If the room illuminance level is above this value, the dimmer will not be activated.
-    // This is to avoid triggering the dimmer when the room is lighted up by other sources
-    illuminanceThreshold: 10, // illuminance level in lux to trigger the dimmer after motion detection
+  /* ****************************************************************************************
+   * *************** THIS IS WHERE YOU NEED TO UPDATE AUTOMATION CONFIGURATION *************
+   * ****************************************************************************************/
+  // THIS ATTRIBUTE TELLS WHEN THE AUTOMATION IS ALLOWED TO RUN. OPTIONS ARE: 
+  // "NIGHT", "SPECIFIED" or "ALWAYS". 
+  // "NIGHT" is defined as a period from down to dusk
+  // "SPECIFIED" uses below specifiedTimes, for defining activation hours (time interval)
+  // "ALWAYS" means that the motion detected dimming runs 24/7 without any limitations 
+  // it is intended to be used as a diagnostic mode
+  activationTimes: "ALWAYS", // "NIGHT", "SPECIFIED" or "ALWAYS"
+
+  // SPECIFIED TIMES FOR THE AUTOMATION TO RUN 
+  // This is the time period when automation is active. Outside of specified hours it becomes idle
+  specifiedTimes: [
+    {
+      start: "23:00",
+      end: "07:00"
+    }
+  ],
+
+  // PASTE YOUR SHELLY BLU MOTION DETECTOR MAC BELOW 
+  // MAC is a unique device identifier and can be found in device's Settings → Device information
+  allowedMacAddresses: [
+    "94:B2:16:08:8D:CE" // devices with these mac addresses will be used to trigger the dimmer
+  ],
+
+  // LIGHTS ON TIME PERIOD (in seconds) 
+  // This is the time interval for which lights will stay on, dimmed to below defined value
+  lightsOnTimePeriod: 120, // seconds
+
+  // CONFIGURE THE BRIGHTNESS (in percentage) TO SET AFTER MOTION DETECTION
+  // This is the illuminance/lights "intensivity" when turned on. 
+  lightBrightness: 3, // percentage value of the brightness to set after motion 
+
+  // SHELLY BLU MOTION ROOM ILLUMINANCE THRESHOLD TO TRIGGER THE DIMMER
+  // If the room illuminance level is above this value, the dimmer will not be activated.
+  // This is to avoid triggering the dimmer when the room is lighted up by other sources
+  illuminanceThreshold: 10, // illuminance level in lux to trigger the dimmer after motion detection
 
   /**
    * In the below method contains automation logic implementation. 
@@ -67,105 +67,105 @@ let CONFIG = {
     // Initialization
     let allowed = false;
 
-      // Get the current time in seconds since midnight
-      let now = new Date();
-      let nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    // Get the current time in seconds since midnight
+    let now = new Date();
+    let nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 
-      // Convert HH:MM → seconds
-      function timeToSec(t) {
-        if (!t || typeof t !== "string") {
-          console.log("Invalid time format:", t);
-          return 0;
-        }
-      
-        if (t.indexOf(":") < 0) {
-          console.log("Invalid time format:", t);
-          return 0;
-        }
-      
-        let parts = t.split(":");
-        let h = Number(parts[0]);
-        let m = Number(parts[1]);
-      
-        return h * 3600 + m * 60;
+    // Convert HH:MM → seconds
+    function timeToSec(t) {
+      if (!t || typeof t !== "string") {
+        console.log("Invalid time format:", t);
+        return 0;
       }
-   
-      // Convert SPECIFIED times once
-      let startSec = timeToSec(CONFIG.specifiedTimes[0].start);
-      let endSec   = timeToSec(CONFIG.specifiedTimes[0].end);
 
-      console.log("Logic triggered at time:", now.getHours(), ":", now.getMinutes(), ":", now.getSeconds());
-      
-            // Check if the automation is allowed to run during night
-      if (CONFIG.activationTimes === "NIGHT") {
+      if (t.indexOf(":") < 0) {
+        console.log("Invalid time format:", t);
+        return 0;
+      }
 
-        // Get sunrise/sunset from system component
-        let sys = Shelly.getComponentStatus("sys");
-        let sunriseSec = sys.sunrise;   // seconds since midnight
-        let sunsetSec  = sys.sunset;    // seconds since midnight
+      let parts = t.split(":");
+      let h = Number(parts[0]);
+      let m = Number(parts[1]);
 
-        allowed = (!((nowSec > sunriseSec ) && (nowSec < sunsetSec))) 
-          && (CONFIG.illuminanceThreshold > eventData.illuminance);
-        if (!allowed) {
-            console.log(
-            "It is either outside the night window (sunset→sunrise) or illuminance is above the threshold",
-            CONFIG.illuminanceThreshold,
-            "lux)"
+      return h * 3600 + m * 60;
+    }
+
+    // Convert SPECIFIED times once
+    let startSec = timeToSec(CONFIG.specifiedTimes[0].start);
+    let endSec = timeToSec(CONFIG.specifiedTimes[0].end);
+
+    console.log("Logic triggered at time:", now.getHours(), ":", now.getMinutes(), ":", now.getSeconds());
+
+    // Check if the automation is allowed to run during night
+    if (CONFIG.activationTimes === "NIGHT") {
+
+      // Get sunrise/sunset from system component
+      let sys = Shelly.getComponentStatus("sys");
+      let sunriseSec = sys.sunrise;   // seconds since midnight
+      let sunsetSec = sys.sunset;    // seconds since midnight
+
+      allowed = (!((nowSec > sunriseSec) && (nowSec < sunsetSec)))
+        && (CONFIG.illuminanceThreshold > eventData.illuminance);
+      if (!allowed) {
+        console.log(
+          "It is either outside the night window (sunset→sunrise) or illuminance is above the threshold",
+          CONFIG.illuminanceThreshold,
+          "lux)"
           return;
-        }
       }
-      // Check if the automation is allowed to run based on the activation times and illuminance threshold during specified times 
-      else if (CONFIG.activationTimes === "SPECIFIED") {
-        allowed = !((nowSec > endSec) && (nowSec < startSec))
-          && (CONFIG.illuminanceThreshold > eventData.illuminance);
-        if (!allowed) {
-          console.log("Motion detected, but not allowed to run");
-          console.log(
-            "It is either outside the specified times window (start→end) (start:",
-            CONFIG.specifiedTimes[0].start,
-            "end:",
-            CONFIG.specifiedTimes[0].end,
-            ") or illuminance is below the threshold (",
-            CONFIG.illuminanceThreshold,
-            "lux)"
-          );
-          return;
-        }
+    }
+    // Check if the automation is allowed to run based on the activation times and illuminance threshold during specified times 
+    else if (CONFIG.activationTimes === "SPECIFIED") {
+      allowed = !((nowSec > endSec) && (nowSec < startSec))
+        && (CONFIG.illuminanceThreshold > eventData.illuminance);
+      if (!allowed) {
+        console.log("Motion detected, but not allowed to run");
+        console.log(
+          "It is either outside the specified times window (start→end) (start:",
+          CONFIG.specifiedTimes[0].start,
+          "end:",
+          CONFIG.specifiedTimes[0].end,
+          ") or illuminance is below the threshold (",
+          CONFIG.illuminanceThreshold,
+          "lux)"
+        );
+        return;
       }
-      else if (CONFIG.activationTimes === "ALWAYS"){
-        allowed = true
-      }
-      console.log(
-        "Motion detected → Motion Triggered Dimming automation is allowed to run"
-      );
+    }
+    else if (CONFIG.activationTimes === "ALWAYS") {
+      allowed = true
+    }
+    console.log(
+      "Motion detected → Motion Triggered Dimming automation is allowed to run"
+    );
 
-      // Get dimmer output state
-      let lightsOn = Shelly.getComponentStatus("Light:0").output
-              
-      if (!lightsOn && allowed && motion) {
-        console.log ("Turning on lights to specified brightnes", 
-          CONFIG.lightBrightness, "for", 
-          CONFIG.lightsOnTimePeriod, "seconds")
-        Shelly.call("Light.Set", {'id': 0, 'brightness': CONFIG.lightBrightness,'on': true})
-      
-        Timer.set(CONFIG.lightsOnTimePeriod * 1000, false, function () {
-          console.log(
-            "Turning off the dimmer after the defined time period:",
-            CONFIG.lightsOnTimePeriod,
-            "seconds"
-          );
-          Shelly.call("Light.Set", { id: 0, 'on': false });
-        });
-        
+    // Get dimmer output state
+    let lightsOn = Shelly.getComponentStatus("Light:0").output
+
+    if (!lightsOn && allowed && motion) {
+      console.log("Turning on lights to specified brightnes",
+        CONFIG.lightBrightness, "for",
+        CONFIG.lightsOnTimePeriod, "seconds")
+      Shelly.call("Light.Set", { 'id': 0, 'brightness': CONFIG.lightBrightness, 'on': true })
+
+      Timer.set(CONFIG.lightsOnTimePeriod * 1000, false, function () {
+        console.log(
+          "Turning off the dimmer after the defined time period:",
+          CONFIG.lightsOnTimePeriod,
+          "seconds"
+        );
+        Shelly.call("Light.Set", { id: 0, 'on': false });
+      });
+
+    }
+    else {
+      if (lightsOn) {
+        console.log("Automation has done nothing. Lights were ON");
       }
-      else {
-        if(lightsOn) {
-          console.log("Automation has done nothing. Lights were ON");
-        }
-        if(!allowed) {
-          console.log("Automation has done nothing. Automation logic prevented execution");
-        }
+      if (!allowed) {
+        console.log("Automation has done nothing. Automation logic prevented execution");
       }
+    }
   },
 
   /**
