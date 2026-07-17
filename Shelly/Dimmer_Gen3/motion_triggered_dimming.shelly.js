@@ -5,7 +5,7 @@
  * @status production
  * @link https://github.com/SmartHomeForAll/Altavio_Scripts/Shelly/Dimmer_Gen3/motion_triggered_dimming.shelly.js
  * @author: Konrad Herba (konrad@altav.io)
- * @version: 1.1.0
+ * @version: 1.0.0
  * @license: MIT
  */
 
