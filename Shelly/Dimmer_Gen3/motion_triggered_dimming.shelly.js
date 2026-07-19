@@ -55,7 +55,7 @@ let CONFIG = {
   // SHELLY BLU MOTION ROOM ILLUMINANCE THRESHOLD TO TRIGGER THE DIMMER
   // If the room illuminance level is above this value, the dimmer will not be activated.
   // This is to avoid triggering the dimmer when the room is lighted up by other sources
-  illuminanceThreshold: 10, // illuminance level in lux to trigger the dimmer after motion detection
+  illuminanceThreshold: 20, // illuminance level in lux to trigger the dimmer after motion detection
 
   /**
    * In the below method contains automation logic implementation. 
@@ -108,9 +108,11 @@ let CONFIG = {
         && (CONFIG.illuminanceThreshold > eventData.illuminance);
       if (!allowed) {
         console.log(
-          "It is either outside the night window (sunset→sunrise) or illuminance is above the threshold",
+          "It is either outside the night window (sunset→sunrise) or illuminance (measured",
+          eventData.illuminance,
+          "lux) is above the threshold (configured to",
           CONFIG.illuminanceThreshold,
-          "lux)"
+          "lux)");
           return;
       }
     }
@@ -125,7 +127,9 @@ let CONFIG = {
           CONFIG.specifiedTimes[0].start,
           "end:",
           CONFIG.specifiedTimes[0].end,
-          ") or illuminance is below the threshold (",
+          ") or illuminance measured (",
+          eventData.illuminance,
+          "lux) is above the threshold (onfigured to",
           CONFIG.illuminanceThreshold,
           "lux)"
         );
@@ -140,13 +144,13 @@ let CONFIG = {
     );
 
     // Get dimmer output state
-    let lightsOn = Shelly.getComponentStatus("Light:0").output
+    let lightsOn = Shelly.getComponentStatus("Light:0").output;
 
     if (!lightsOn && allowed && motion) {
       console.log("Turning on lights to specified brightnes",
-        CONFIG.lightBrightness, "for",
-        CONFIG.lightsOnTimePeriod, "seconds")
-      Shelly.call("Light.Set", { 'id': 0, 'brightness': CONFIG.lightBrightness, 'on': true })
+        CONFIG.lightBrightness, "% for",
+        CONFIG.lightsOnTimePeriod, "seconds");
+      Shelly.call("Light.Set", { 'id': 0, 'brightness': CONFIG.lightBrightness, 'on': true });
 
       Timer.set(CONFIG.lightsOnTimePeriod * 1000, false, function () {
         console.log(
