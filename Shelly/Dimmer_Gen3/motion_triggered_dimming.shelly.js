@@ -46,11 +46,11 @@ let CONFIG = {
 
   // LIGHTS ON TIME PERIOD (in seconds) 
   // This is the time interval for which lights will stay on, dimmed to below defined value
-  lightsOnTimePeriod: 120, // seconds
+  lightsOnTimePeriod: 10, // seconds
 
   // CONFIGURE THE BRIGHTNESS (in percentage) TO SET AFTER MOTION DETECTION
   // This is the illuminance/lights "intensivity" when turned on. 
-  lightBrightness: 3, // percentage value of the brightness to set after motion 
+  lightBrightness: 50, // percentage value of the brightness to set after motion 
 
   // SHELLY BLU MOTION ROOM ILLUMINANCE THRESHOLD TO TRIGGER THE DIMMER
   // If the room illuminance level is above this value, the dimmer will not be activated.
@@ -395,7 +395,7 @@ function init() {
   let BLEConfig = Shelly.getComponentConfig("ble");
 
   //exit if the BLE isn't enabled
-  if (!BLEConfig.enable) {
+  if (!BLEConfig.rpc.enable) {
     console.log(
       "Error: The Bluetooth is not enabled, please enable it from settings"
     );
