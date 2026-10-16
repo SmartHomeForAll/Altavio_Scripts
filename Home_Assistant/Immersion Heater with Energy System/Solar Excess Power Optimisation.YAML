@@ -1,0 +1,302 @@
+alias: Solar Excess Power Optimisation
+description: >
+  Allocates simulated PV excess to fixed loads by priority, then uses the
+  remaining power for the EV charger. The immersion heater can operate either as
+  a fixed 3 kW ON/OFF load or as a proportional solar diverter.
+triggers:
+  - trigger: state
+    entity_id:
+      - sensor.pv_excess_power_generation
+      - input_select.immersion_heater_priority
+      - input_select.air_conditioner_priority
+      - input_select.washing_machine_priority
+      - input_select.ev_charger_mode
+      - input_select.smart_switch_type
+actions:
+  - variables:
+      pv_power: '{{ states(''sensor.pv_excess_power_generation'') | float(0) }}'
+      remaining_power: '{{ states(''sensor.pv_excess_power_generation'') | float(0) }}'
+  - variables:
+      priority_1_required: |-
+        {% if is_state('input_select.immersion_heater_priority', '1') %}
+          {% if is_state('input_select.smart_switch_type', 'Solar Diverter') %}
+            {% if remaining_power | float(0) >= 500 %}
+              {{ [remaining_power | float(0), 3000] | min }}
+            {% else %}
+              0
+            {% endif %}
+          {% else %}
+            3000
+          {% endif %}
+        {% elif is_state('input_select.air_conditioner_priority', '1') %}
+          1500
+        {% elif is_state('input_select.washing_machine_priority', '1') %}
+          2000
+        {% else %}
+          0
+        {% endif %}
+  - variables:
+      priority_1_running: |-
+        {% if is_state('input_select.immersion_heater_priority', '1')
+              and is_state('input_select.smart_switch_type', 'Solar Diverter') %}
+          {{ priority_1_required | float(0) >= 500 }}
+        {% else %}
+          {{ priority_1_required | float(0) > 0
+             and remaining_power | float(0) >= priority_1_required | float(0) }}
+        {% endif %}
+  - variables:
+      remaining_power: |-
+        {% if priority_1_running %}
+          {{ (remaining_power | float(0)) - (priority_1_required | float(0)) }}
+        {% else %}
+          {{ remaining_power | float(0) }}
+        {% endif %}
+  - variables:
+      priority_2_required: |-
+        {% if is_state('input_select.immersion_heater_priority', '2') %}
+          {% if is_state('input_select.smart_switch_type', 'Solar Diverter') %}
+            {% if remaining_power | float(0) >= 500 %}
+              {{ [remaining_power | float(0), 3000] | min }}
+            {% else %}
+              0
+            {% endif %}
+          {% else %}
+            3000
+          {% endif %}
+        {% elif is_state('input_select.air_conditioner_priority', '2') %}
+          1500
+        {% elif is_state('input_select.washing_machine_priority', '2') %}
+          2000
+        {% else %}
+          0
+        {% endif %}
+  - variables:
+      priority_2_running: |-
+        {% if is_state('input_select.immersion_heater_priority', '2')
+              and is_state('input_select.smart_switch_type', 'Solar Diverter') %}
+          {{ priority_2_required | float(0) >= 500 }}
+        {% else %}
+          {{ priority_2_required | float(0) > 0
+             and remaining_power | float(0) >= priority_2_required | float(0) }}
+        {% endif %}
+  - variables:
+      remaining_power: |-
+        {% if priority_2_running %}
+          {{ (remaining_power | float(0)) - (priority_2_required | float(0)) }}
+        {% else %}
+          {{ remaining_power | float(0) }}
+        {% endif %}
+  - variables:
+      priority_3_required: |-
+        {% if is_state('input_select.immersion_heater_priority', '3') %}
+          {% if is_state('input_select.smart_switch_type', 'Solar Diverter') %}
+            {% if remaining_power | float(0) >= 500 %}
+              {{ [remaining_power | float(0), 3000] | min }}
+            {% else %}
+              0
+            {% endif %}
+          {% else %}
+            3000
+          {% endif %}
+        {% elif is_state('input_select.air_conditioner_priority', '3') %}
+          1500
+        {% elif is_state('input_select.washing_machine_priority', '3') %}
+          2000
+        {% else %}
+          0
+        {% endif %}
+  - variables:
+      priority_3_running: |-
+        {% if is_state('input_select.immersion_heater_priority', '3')
+              and is_state('input_select.smart_switch_type', 'Solar Diverter') %}
+          {{ priority_3_required | float(0) >= 500 }}
+        {% else %}
+          {{ priority_3_required | float(0) > 0
+             and remaining_power | float(0) >= priority_3_required | float(0) }}
+        {% endif %}
+  - variables:
+      remaining_power: |-
+        {% if priority_3_running %}
+          {{ (remaining_power | float(0)) - (priority_3_required | float(0)) }}
+        {% else %}
+          {{ remaining_power | float(0) }}
+        {% endif %}
+  - variables:
+      immersion_power: |-
+        {% if is_state('input_select.immersion_heater_priority', '1') %}
+          {{ priority_1_required | float(0) }}
+        {% elif is_state('input_select.immersion_heater_priority', '2') %}
+          {{ priority_2_required | float(0) }}
+        {% elif is_state('input_select.immersion_heater_priority', '3') %}
+          {{ priority_3_required | float(0) }}
+        {% else %}
+          0
+        {% endif %}
+      immersion_running: |-
+        {% if is_state('input_select.immersion_heater_priority', '1') %}
+          {{ priority_1_running }}
+        {% elif is_state('input_select.immersion_heater_priority', '2') %}
+          {{ priority_2_running }}
+        {% elif is_state('input_select.immersion_heater_priority', '3') %}
+          {{ priority_3_running }}
+        {% else %}
+          false
+        {% endif %}
+  - if:
+      - condition: template
+        value_template: '{{ immersion_running }}'
+    then:
+      - if:
+          - condition: template
+            value_template: |
+              {{ is_state('input_select.smart_switch_type', 'Solar Diverter') }}
+        then:
+          - action: light.turn_on
+            target:
+              entity_id: light.training_lab_immersion_heater
+            data:
+              brightness_pct: >
+                {% set power = immersion_power | float(0) %} {% if power < 500
+                %}
+                  0
+                {% elif power >= 3000 %}
+                  100
+                {% else %}
+                  {{ (30 + ((power - 500) * 70 / 2500)) | round(0) }}
+                {% endif %}
+              rgb_color: >
+                {% set power = immersion_power | float(0) %} {% if power <= 500
+                %}
+                  [255, 255, 255]
+                {% elif power >= 3000 %}
+                  [255, 0, 0]
+                {% else %}
+                  {% set progress = (power - 500) / 2500 %}
+                  [
+                    255,
+                    {{ (255 * (1 - progress)) | round(0) }},
+                    {{ (255 * (1 - progress)) | round(0) }}
+                  ]
+                {% endif %}
+        else:
+          - action: light.turn_on
+            target:
+              entity_id: light.training_lab_immersion_heater
+            data:
+              brightness_pct: 100
+              rgb_color:
+                - 255
+                - 0
+                - 0
+    else:
+      - action: light.turn_off
+        target:
+          entity_id: light.training_lab_immersion_heater
+  - if:
+      - condition: template
+        value_template: |
+          {{ is_state('input_select.air_conditioner_priority', '1')
+             and priority_1_running
+             or
+             is_state('input_select.air_conditioner_priority', '2')
+             and priority_2_running
+             or
+             is_state('input_select.air_conditioner_priority', '3')
+             and priority_3_running }}
+    then:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.shellyplus2pm_2043a80a8bd4_output_0
+    else:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.shellyplus2pm_2043a80a8bd4_output_0
+  - if:
+      - condition: template
+        value_template: |
+          {{ is_state('input_select.washing_machine_priority', '1')
+             and priority_1_running
+             or
+             is_state('input_select.washing_machine_priority', '2')
+             and priority_2_running
+             or
+             is_state('input_select.washing_machine_priority', '3')
+             and priority_3_running }}
+    then:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.shellyplus2pm_2043a80a8bd4_output_1
+    else:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.shellyplus2pm_2043a80a8bd4_output_1
+  - variables:
+      ev_power: |-
+        {% if is_state('input_select.ev_charger_mode', 'ON') %}
+          {% if remaining_power | float(0) >= 7400 %}
+            7400
+          {% elif remaining_power | float(0) >= 5032 %}
+            5032
+          {% elif remaining_power | float(0) >= 3034 %}
+            3034
+          {% elif remaining_power | float(0) >= 1998 %}
+            1998
+          {% elif remaining_power | float(0) >= 1406 %}
+            1406
+          {% else %}
+            0
+          {% endif %}
+        {% else %}
+          0
+        {% endif %}
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: '{{ ev_power | float(0) >= 7400 }}'
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.landing_dimmer
+            data:
+              brightness_pct: 100
+      - conditions:
+          - condition: template
+            value_template: '{{ ev_power | float(0) >= 5032 }}'
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.landing_dimmer
+            data:
+              brightness_pct: 68
+      - conditions:
+          - condition: template
+            value_template: '{{ ev_power | float(0) >= 3034 }}'
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.landing_dimmer
+            data:
+              brightness_pct: 41
+      - conditions:
+          - condition: template
+            value_template: '{{ ev_power | float(0) >= 1998 }}'
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.landing_dimmer
+            data:
+              brightness_pct: 27
+      - conditions:
+          - condition: template
+            value_template: '{{ ev_power | float(0) >= 1406 }}'
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.landing_dimmer
+            data:
+              brightness_pct: 19
+    default:
+      - action: light.turn_off
+        target:
+          entity_id: light.landing_dimmer
+mode: restart
